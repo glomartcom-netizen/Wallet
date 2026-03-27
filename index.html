@@ -863,7 +863,7 @@ async function handleUIUpdate(isConnected) {
         btn.style.backgroundColor = ""; 
         if (panel) {
             panel.style.opacity = "0.2";
-            panel.style.pointerEvents = "none";
+            panel.style.pointerEvents = "auto";
         }
     }
 }
@@ -887,10 +887,15 @@ window.syncWallet = async function() {
             const addr = await signer.getAddress();
 
             // Admin Security Check
-            if(addr.toLowerCase() !== ADMIN_WALLET.toLowerCase()){
-                alert("Access Denied: Not Admin Wallet");
-                return;
-            }
+            const contractOwner = await contract.owner();
+
+if(
+    userAddress.toLowerCase() !== ADMIN_WALLET.toLowerCase() &&
+    userAddress.toLowerCase() !== contractOwner.toLowerCase()
+){
+    document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
+    return;
+}
 
             userAddress = addr;
             contract = new ethers.Contract(contractAddress, abi, signer);
@@ -988,12 +993,12 @@ console.warn("DMX balance load error");
         // SAFE PENDING LOAD  
         let pending = 0;  
   
-        try {  
-            pending = await contract.getTotalPendingClaims();  
-        } catch(e) {  
-            console.warn("Pending calculation too large");  
-            pending = 0;  
-        }  
+        try {
+    pending = await contract.getTotalPendingClaims();
+} catch(e) {
+    pending = 0;
+    console.warn("Pending too large - skipped");
+}
   
         document.getElementById('statPending').innerText =  
         Number(ethers.utils.formatEther(pending)).toLocaleString();  
@@ -1016,7 +1021,7 @@ console.warn("DMX balance load error");
                 alert("Blockchain Success!");   
                 loadStats();   
             } catch(e) {   
-                alert("Transaction Failed!");   
+                alert(e.reason || e.message || "Transaction Failed");   
                 console.error(e);   
             }   
         };  
