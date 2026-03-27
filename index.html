@@ -887,21 +887,27 @@ window.syncWallet = async function() {
             const addr = await signer.getAddress();
 
             // ✅ INIT CONTRACT FIRST
-            contract = new ethers.Contract(contractAddress, abi, signer);
+contract = new ethers.Contract(contractAddress, abi, signer);
 
-            // ✅ GET OWNER
-            const contractOwner = await contract.owner();
+// ✅ GET OWNER SAFE
+let contractOwner = "";
+try {
+    contractOwner = await contract.owner();
+} catch(e) {
+    console.warn("Owner fetch failed");
+}
 
-            // ✅ SECURITY CHECK
-            if(
-                addr.toLowerCase() !== ADMIN_WALLET.toLowerCase() &&
-                addr.toLowerCase() !== contractOwner.toLowerCase()
-            ){
-                document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
-                return;
-            }
+// ✅ USE addr (NOT userAddress)
+if(
+    addr.toLowerCase() !== ADMIN_WALLET.toLowerCase() &&
+    (contractOwner && addr.toLowerCase() !== contractOwner.toLowerCase())
+){
+    document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
+    return;
+}
 
-            userAddress = addr;
+// ✅ AFTER CHECK → assign
+userAddress = addr;
 
             await handleUIUpdate(true);
             
