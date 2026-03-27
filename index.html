@@ -1,1 +1,1373 @@
-
+<!DOCTYPE html>    
+<html lang="ta">    
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>DimeX | Master Admin </title>    
+    <script src="https://cdn.tailwindcss.com"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>    
+    <style>    
+        /* Professional Dark Admin Palette with Depth */    
+        body {     
+            background: linear-gradient(180deg, #020617 0%, #0b1220 100%);    
+            color: #f8fafc;     
+            min-height: 100vh;    
+        }    
+            
+        /* Admin Cards - Enhanced Contrast */    
+        .admin-card {     
+            background: #111827;     
+            border: 1px solid #1e293b;     
+            border-radius: 18px;    
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);    
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);     
+        }    
+            
+        /* Premium Glow Hover Effect */    
+        .admin-card:hover {     
+            border-color: #38bdf8;     
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.6);    
+            transform: translateY(-4px);    
+        }    
+            
+        .gradient-text {     
+            background: linear-gradient(90deg, #38bdf8, #22d3ee);     
+            -webkit-background-clip: text;     
+            -webkit-text-fill-color: transparent;     
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));    
+        }    
+    
+        /* High Visibility Labels */    
+        label { color: #94a3b8; font-weight: 700; letter-spacing: 0.05em; }    
+            
+        /* Buttons with Better Feedback */    
+        .btn-action {     
+            transition: all 0.2s ease;     
+            cursor: pointer;     
+            border-radius: 12px;     
+            font-weight: 800;    
+            text-transform: uppercase;    
+            letter-spacing: 0.025em;    
+        }    
+        .btn-action:hover { filter: brightness(1.1); transform: translateY(-1px); }    
+        .btn-action:active { transform: scale(0.96); }    
+            
+        /* Inputs - Solid Contrast */    
+        input {     
+            background: #020617 !important;     
+            border: 1px solid #334155 !important;     
+            color: #ffffff !important;     
+            outline: none;     
+            padding: 10px;    
+            font-weight: 500;    
+        }    
+        input:focus {     
+            border-color: #38bdf8 !important;     
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);     
+        }    
+            
+        /* Stats Glow */    
+        .stat-value { text-shadow: 0 0 15px rgba(255,255,255,0.2); }    
+    </style>    
+</head>    
+<body class="font-sans pb-20">    
+    
+    <header class="p-6 border-b border-white/10 bg-[#111827]/80 sticky top-0 z-50 backdrop-blur-xl flex justify-between items-center">    
+        <div>    
+            <h1 class="text-3xl font-black gradient-text tracking-tighter">DIMEX ADMIN</h1>    
+            <p id="adminStatus" class="text-[11px] text-blue-400 uppercase tracking-widest font-bold mt-1">● Awaiting Connection...</p>    
+        </div>    
+        <button id="walletBtn"      
+onclick="window.appKitModal.open()" class="bg-[#38bdf8] hover:bg-blue-400 text-black px-8 py-3 btn-action shadow-xl text-sm">Connect Admin</button>    
+    </header>    
+    
+    <main id="adminPanel" class="p-6 max-w-[1440px] mx-auto opacity-20 pointer-events-none transition-opacity duration-700">    
+    
+<!-- STATS -->    
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">    
+    
+<div class="admin-card p-6 border-l-4 border-l-blue-500">    
+<p class="text-gray-400 text-xs uppercase font-black">Total Staked</p>    
+<div class="text-sm mt-3 font-mono">    
+USDT:    
+<span id="statUSDT" class="text-white font-black text-lg stat-value">0</span>    
+<br>    
+DMX:    
+<span id="statDMX" class="text-cyan-400 font-black text-lg stat-value">0</span>    
+</div>    
+</div>    
+    
+<div class="admin-card p-6 border-l-4 border-l-emerald-500">    
+<p class="text-gray-400 text-xs uppercase font-black">Claims & Restake</p>    
+<div class="text-sm mt-3 font-mono">    
+Restake:    
+<span id="statRestake" class="text-emerald-400 font-black text-lg stat-value">0</span>    
+<br>    
+Claimed:    
+<span id="statClaimed" class="text-white font-black text-lg stat-value">0</span>    
+</div>    
+</div>    
+    
+<div class="admin-card p-6 border-l-4 border-l-purple-500">    
+<p class="text-gray-400 text-xs uppercase font-black">Total Payouts</p>    
+<div class="text-sm mt-3 font-mono">    
+Direct:    
+<span id="statDirectPaid" class="text-purple-400 font-black text-lg stat-value">0</span>    
+<br>    
+Level:    
+<span id="statLevelPaid" class="text-white font-black text-lg stat-value">0</span>    
+</div>    
+</div>    
+    
+<div class="admin-card p-6 border-l-4 border-l-yellow-500">    
+<p class="text-yellow-500 text-xs uppercase font-black">Network Stats</p>    
+    
+<div class="text-sm mt-3 font-mono">    
+    
+Pending:    
+<span id="statPending" class="text-yellow-400 font-black text-lg stat-value">0</span>    
+    
+<br>    
+    
+Users:    
+<span id="statMembersCount" class="text-white font-black text-lg stat-value">0</span>    
+    
+<br>    
+    
+DMX Balance:    
+<span id="statContractDMX" class="text-cyan-300 font-black text-lg stat-value">0</span>    
+    
+</div>    
+</div>    
+    
+</div> <!-- STATS GRID CLOSE -->    
+    
+<div class="flex justify-center mb-10">    
+    
+<button onclick="loadStats()"    
+class="bg-cyan-600 px-6 py-3 rounded-xl text-white font-bold">    
+Refresh Stats    
+</button>    
+    
+</div>    
+    
+<!-- MAIN GRID -->    
+<section class="admin-card p-8">    
+    <h2 class="text-xl font-black mb-6 text-cyan-400 uppercase border-b border-white/10 pb-3">    
+        ⚙️ Protocol Engine    
+    </h2>    
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">    
+        <div class="space-y-6">    
+            <label class="text-xs uppercase">Reward BPS (90 / 180 / 365)</label>    
+            <div class="flex gap-3">    
+                <input id="r90" type="number" placeholder="90 days" class="w-full p-3 rounded-xl text-center">    
+                <input id="r180" type="number" placeholder="180 days" class="w-full p-3 rounded-xl text-center">    
+                <input id="r365" type="number" placeholder="365 days" class="w-full p-3 rounded-xl text-center">    
+                <button onclick="setRates()" class="bg-slate-700 px-6 py-3 rounded-xl font-bold btn-action">Update</button>    
+            </div>    
+    
+            <div class="space-y-2">    
+                <label class="text-xs uppercase">Min Stake (DMX)</label>    
+                <div class="flex gap-3">    
+                    <input id="minStakeInput" type="number" placeholder="e.g. 2500" class="flex-1 p-3 rounded-xl">    
+                    <button onclick="updateMinStake()" class="bg-indigo-600 px-6 py-3 rounded-xl font-bold text-white btn-action">SET</button>    
+                </div>    
+            </div>    
+    
+            <div class="flex gap-4">    
+                <div class="flex-1">    
+                    <label class="text-xs uppercase">Min Claim</label>    
+                    <input id="minClaim" type="number" class="w-full p-3 rounded-xl">    
+                </div>    
+                <div class="flex-1">    
+                    <label class="text-xs uppercase">Income Cap</label>    
+                    <input id="incCap" type="number" class="w-full p-3 rounded-xl">    
+                </div>    
+                <button onclick="setLimits()" class="bg-blue-600 px-6 py-3 rounded-xl font-bold text-white btn-action">Set</button>    
+            </div>    
+        </div>    
+    
+        <div class="space-y-6">    
+            <label class="text-xs uppercase">    
+                Price Mode : <span id="priceStatus" class="font-bold ml-2 text-yellow-400">SYNCING</span>    
+            </label>    
+            <div class="flex gap-3">    
+                <input id="manPrice" type="number" step="0.000001" placeholder="Manual Price" class="flex-1 p-3 rounded-xl">    
+                <button onclick="setPrice()" class="bg-yellow-600 px-5 py-3 rounded-xl font-bold text-white btn-action">SET</button>    
+                <button onclick="togglePrice()" class="bg-green-600 px-5 py-3 rounded-xl font-bold text-white btn-action">LIVE</button>    
+            </div>    
+    
+            <div class="flex gap-4">    
+                <div class="flex-1">    
+                    <label class="text-xs uppercase">Direct %</label>    
+                    <input id="dirPct" type="number" class="w-full p-3 rounded-xl">    
+                </div>    
+                <div class="flex-1">    
+                    <label class="text-xs uppercase">Restake %</label>    
+                    <input id="restkPct" type="number" class="w-full p-3 rounded-xl">    
+                </div>    
+                <button onclick="setBonuses()" class="bg-blue-600 px-6 py-3 rounded-xl font-bold text-white btn-action">Set</button>    
+            </div>    
+        </div>    
+    </div>    
+</section>    
+    
+    
+<!-- MEMBERS -->    
+    
+<section class="admin-card p-8">    
+    
+<h2 class="text-xl font-black text-purple-400 mb-6">    
+👥 Members List    
+</h2>    
+    
+<div class="mb-3 text-sm text-gray-300">    
+Total Members: <span id="memberCount" class="text-white font-bold">0</span>    
+</div>    
+    
+<button onclick="loadMembers()"    
+class="bg-purple-600 px-6 py-3 rounded-xl text-white font-bold mb-4">    
+Load Members    
+</button>    
+    
+<div id="membersBox"    
+class="bg-black/40 p-4 rounded-xl text-sm font-mono max-h-80 overflow-y-auto">    
+No Data    
+</div>    
+    
+<div class="mt-6 space-y-3">    
+    
+<input id="searchUser"    
+placeholder="Search Wallet Address"    
+class="w-full p-3 rounded-xl">    
+    
+<button onclick="searchUser()"    
+class="bg-blue-600 px-6 py-2 rounded-xl text-white font-bold">    
+Search User    
+</button>    
+    
+<div id="userResult"    
+class="text-sm text-gray-300"></div>    
+    
+</div>    
+    
+</section>    
+    
+    
+<!-- TOP LEADERS -->    
+    
+<section class="admin-card p-8">    
+    
+<h2 class="text-xl font-black text-yellow-400 mb-6">    
+🏆 Leaderboards    
+</h2>    
+    
+<button onclick="loadLeaderboards()"    
+class="bg-yellow-600 px-6 py-3 rounded-xl text-white font-bold mb-4">    
+Load Leaderboards    
+</button>    
+    
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">    
+    
+<div>    
+<h3 class="text-cyan-400 font-bold mb-2">Top Stakers</h3>    
+<div id="topStakers" class="bg-black/40 p-4 rounded-xl text-sm font-mono max-h-80 overflow-y-auto"></div>    
+</div>    
+    
+<div>    
+<h3 class="text-green-400 font-bold mb-2">Top Team Builders</h3>    
+<div id="topTeam" class="bg-black/40 p-4 rounded-xl text-sm font-mono max-h-80 overflow-y-auto"></div>    
+</div>    
+    
+<div>    
+<h3 class="text-orange-400 font-bold mb-2">Top Direct Sponsors</h3>    
+<div id="topDirect" class="bg-black/40 p-4 rounded-xl text-sm font-mono max-h-80 overflow-y-auto"></div>    
+</div>    
+    
+<div>    
+<h3 class="text-purple-400 font-bold mb-2">Top Earners</h3>    
+<div id="topEarners" class="bg-black/40 p-4 rounded-xl text-sm font-mono max-h-80 overflow-y-auto"></div>    
+</div>    
+    
+</div>    
+    
+</section>    
+    
+<!-- MATRIX -->    
+<section class="admin-card p-8">    
+    
+<h2 class="text-xl font-black mb-6 text-emerald-400 uppercase border-b border-white/10 pb-3">    
+📊 Network Matrix    
+</h2>    
+    
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">    
+    
+<div class="space-y-4">    
+    
+<div class="flex gap-4 items-end">    
+    
+<input id="lvlId" type="number"    
+placeholder="Level"    
+class="w-28 p-3 rounded-xl">    
+    
+<input id="lvlBps" type="number"    
+placeholder="Commission BPS"    
+class="flex-1 p-3 rounded-xl">    
+    
+<button onclick="setLevelPct()"    
+class="bg-emerald-600 px-6 py-3 rounded-xl font-bold text-white">    
+Save    
+</button>    
+    
+</div>    
+    
+<div class="flex gap-4 items-end">    
+    
+<input id="volLvlId" type="number"    
+placeholder="Level"    
+class="w-28 p-3 rounded-xl">    
+    
+<input id="volAmt" type="number"    
+placeholder="Volume"    
+class="flex-1 p-3 rounded-xl">    
+    
+<button onclick="setLevelVol()"    
+class="bg-purple-600 px-6 py-3 rounded-xl font-bold text-white">    
+Save    
+</button>    
+    
+</div>    
+    
+</div>    
+    
+    
+<div class="bg-black/40 p-6 rounded-2xl space-y-4">    
+    
+<h3 class="text-sm font-bold text-blue-400 uppercase">    
+Global Announcement    
+</h3>    
+    
+<input id="annMsg"    
+type="text"    
+placeholder="Announcement message..."    
+class="w-full p-3 rounded-xl">    
+    
+<input id="annImg"    
+type="text"    
+placeholder="Image URL (optional)"    
+class="w-full p-3 rounded-xl">    
+    
+<button onclick="postAnn()"    
+class="w-full bg-[#38bdf8] text-black py-3 rounded-xl font-bold">    
+POST ANNOUNCEMENT    
+</button>    
+    
+</div>    
+    
+</div>    
+    
+</section>    
+    
+</div>    
+    
+    
+<!-- RIGHT SIDE -->    
+<div class="space-y-8">    
+    
+<!-- USER CONTROL -->    
+<section class="admin-card p-8 border-t-4 border-yellow-500">    
+    
+<h2 class="text-xl font-black mb-6 text-yellow-500 uppercase">    
+👤 User Control    
+</h2>    
+    
+<div class="space-y-4">    
+    
+<input id="uAddr"    
+type="text"    
+placeholder="User Wallet Address"    
+class="w-full p-4 rounded-xl">    
+    
+<div class="grid grid-cols-2 gap-4">    
+    
+<div>    
+<input id="unlDays"    
+type="number"    
+placeholder="Unlock Days"    
+class="w-full p-3 rounded-xl">    
+    
+<button onclick="unlLevel()"    
+class="w-full mt-2 bg-blue-600 py-3 rounded-xl font-bold text-white">    
+Unlock    
+</button>    
+</div>    
+    
+<div>    
+<input id="custCap"    
+type="number"    
+placeholder="Custom Cap"    
+class="w-full p-3 rounded-xl">    
+    
+<button onclick="setCustCap()"    
+class="w-full mt-2 bg-pink-600 py-3 rounded-xl font-bold text-white">    
+Set Cap    
+</button>    
+</div>    
+    
+</div>    
+    
+<input id="rankAmt"    
+type="number"    
+placeholder="Rank Reward Amount"    
+class="w-full p-3 rounded-xl">    
+    
+<input id="rankName"    
+type="text"    
+placeholder="Rank Name"    
+class="w-full p-3 rounded-xl">    
+    
+<div class="grid grid-cols-2 gap-4">    
+    
+<button onclick="resCap()"    
+class="bg-slate-700 py-3 rounded-xl font-bold">    
+Reset 4X    
+</button>    
+    
+<button onclick="giveRank()"    
+class="bg-orange-600 py-3 rounded-xl font-bold text-white">    
+Give Rank    
+</button>    
+    
+</div>    
+    
+</div>    
+    
+</section>    
+    
+<!-- SECURITY -->    
+<section class="admin-card p-8 border-red-500/40 bg-red-950/10">    
+    
+<h2 class="text-xl font-black mb-6 text-red-500 uppercase">    
+🚨 Security Controls    
+</h2>    
+    
+<div class="space-y-8">    
+    
+<!-- SYSTEM CONTROL -->    
+<div>    
+<h3 class="text-sm font-bold mb-3 text-red-400 uppercase">    
+System Control    
+</h3>    
+    
+<div class="grid grid-cols-2 gap-4">    
+    
+<button onclick="setPause(true)"    
+class="bg-red-600 py-3 rounded-xl font-bold text-white hover:bg-red-700">    
+Pause Contract    
+</button>    
+    
+<button onclick="setPause(false)"    
+class="bg-green-600 py-3 rounded-xl font-bold text-white hover:bg-green-700">    
+Unpause Contract    
+</button>    
+    
+</div>    
+</div>    
+    
+<!-- SWAP ENGINE CONTROL -->    
+    
+<section class="admin-card p-8 border-t-4 border-cyan-500 mt-8">    
+    
+<h2 class="text-xl font-black mb-6 text-cyan-400 uppercase">    
+🔄 Swap Engine Control    
+</h2>    
+    
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">    
+    
+<!-- SWAP MODE -->    
+    
+<div class="space-y-4">    
+    
+<label class="text-xs uppercase">    
+Swap Mode Control    
+</label>    
+    
+<div class="flex gap-4">    
+    
+<button onclick="updateSwapMode(false)"    
+class="flex-1 bg-green-600 py-3 rounded-xl font-bold text-white hover:bg-green-700 btn-action">    
+    
+ENABLE INTERNAL SWAP    
+    
+</button>    
+    
+<button onclick="updateSwapMode(true)"    
+class="flex-1 bg-red-600 py-3 rounded-xl font-bold text-white hover:bg-red-700 btn-action">    
+    
+ENABLE PANCAKE MODE    
+    
+</button>    
+    
+</div>    
+    
+<p class="text-[11px] text-gray-400">    
+    
+Internal Swap → Dashboard swap      
+Pancake Mode → Only PancakeSwap    
+    
+</p>    
+    
+</div>    
+    
+    
+<!-- LIQUIDITY CHECK -->    
+    
+<div class="space-y-4">    
+    
+<label class="text-xs uppercase">    
+Contract Liquidity    
+</label>    
+    
+<div class="grid grid-cols-2 gap-4">    
+    
+<div class="bg-black/40 p-4 rounded-xl border border-white/5">    
+    
+<p class="text-[10px] text-gray-400">    
+USDT Balance    
+</p>    
+    
+<span id="statContractUSDT"    
+class="text-white font-black text-lg">    
+    
+0    
+    
+</span>    
+    
+</div>    
+    
+<div class="bg-black/40 p-4 rounded-xl border border-white/5">    
+    
+<p class="text-[10px] text-gray-400">    
+DMX Balance    
+</p>    
+    
+<span id="statContractDMX2"    
+class="text-cyan-400 font-black text-lg">    
+    
+0    
+    
+</span>    
+    
+</div>    
+    
+</div>    
+    
+<button onclick="loadLiquidity()"    
+class="w-full bg-slate-700 py-2 rounded-lg text-xs font-bold uppercase">    
+    
+Refresh Liquidity    
+    
+</button>    
+    
+</div>    
+    
+</div>    
+    
+</section>        
+    
+    
+<!-- EMERGENCY TOKEN RECOVERY -->    
+<div class="border-t border-white/10 pt-6">    
+    
+<h3 class="text-sm font-bold mb-3 text-yellow-400 uppercase">    
+Emergency Asset Recovery    
+</h3>    
+    
+<input id="ewTok"    
+placeholder="Token Contract Address"    
+class="w-full p-3 rounded-xl mb-2">    
+    
+<input id="ewRec"    
+placeholder="Receiver Wallet Address"    
+class="w-full p-3 rounded-xl mb-2">    
+    
+<input id="ewAmt"    
+placeholder="Amount"    
+class="w-full p-3 rounded-xl mb-4">    
+    
+<button onclick="emgWithdraw()"    
+class="w-full bg-red-600 py-3 rounded-xl font-bold text-white hover:bg-red-700">    
+Recover Tokens    
+</button>    
+    
+</div>    
+    
+    
+<!-- MANUAL REWARD -->    
+<div class="border-t border-white/10 pt-6">    
+    
+<h3 class="text-sm font-bold mb-3 text-green-400 uppercase">    
+Manual Reward    
+</h3>    
+    
+<input id="rewardAddr"    
+placeholder="User Wallet Address"    
+class="w-full p-3 rounded-xl mb-2">    
+    
+<input id="rewardAmt"    
+placeholder="Reward Amount (DMX)"    
+class="w-full p-3 rounded-xl mb-2">    
+    
+<input id="rewardReason"    
+placeholder="Reward Reason"    
+class="w-full p-3 rounded-xl mb-4">    
+    
+<button onclick="manualReward()"    
+class="w-full bg-green-600 py-3 rounded-xl font-bold text-white hover:bg-green-700">    
+Send Reward    
+</button>    
+    
+</div>    
+    
+</div>       
+    
+    
+<!-- TREASURY WALLET -->    
+<div class="border-t border-white/10 pt-6">    
+    
+<h3 class="text-sm font-bold mb-3 text-indigo-400 uppercase">    
+Treasury Wallet    
+</h3>    
+    
+<input id="treasuryAddr"    
+type="text"    
+placeholder="New Treasury Wallet Address"    
+class="w-full p-3 rounded-xl mb-4">    
+    
+<button onclick="changeTreasury()"    
+class="w-full bg-indigo-600 py-3 rounded-xl font-bold text-white hover:bg-indigo-700">    
+Update Treasury Wallet    
+</button>    
+    
+</div>    
+    
+    
+<!-- OWNERSHIP CONTROL -->    
+<div class="border-t border-white/10 pt-6">    
+    
+<h3 class="text-sm font-bold mb-3 text-blue-400 uppercase">    
+Ownership Control    
+</h3>    
+    
+<input id="newOwner"    
+type="text"    
+placeholder="New Owner Wallet Address"    
+class="w-full p-3 rounded-xl mb-4">    
+    
+<button onclick="transferOwn()"    
+class="w-full bg-blue-600 py-3 rounded-xl font-bold text-white hover:bg-blue-700">    
+Transfer Ownership    
+</button>    
+    
+</div>    
+    
+</div>    
+    
+</section>    
+    
+</div>    
+    
+</div>    
+    
+    </main>    
+    
+    <script type="module">      
+import { createAppKit } from 'https://esm.sh/@reown/appkit?bundle'      
+import { Ethers5Adapter } from 'https://esm.sh/@reown/appkit-adapter-ethers5?bundle'      
+import { bsc } from 'https://esm.sh/@reown/appkit/networks?bundle'      
+      
+const projectId = '059cc242b0cc96ac9665c598b76ddc7b';      
+      
+const modal = createAppKit({      
+  adapters: [new Ethers5Adapter()],      
+  networks: [bsc],      
+  metadata: {       
+    name: 'DimeX Pro',       
+    url: window.location.origin,       
+    icons: ['https://i.ibb.co/HpqwGFqt/logo.png']       
+  },      
+  projectId,      
+  features: { analytics: true }      
+});      
+      
+window.appKitModal = modal;      
+      
+modal.subscribeState((state) => {      
+  if(state?.isConnected && window.syncWallet){      
+    window.syncWallet();      
+  }      
+});      
+      
+modal.subscribeProvider((info) => {      
+  if(info?.isConnected && window.syncWallet){      
+    window.syncWallet();      
+  }      
+});      
+      
+/* AUTO RECONNECT */        
+window.addEventListener("load", () => {        
+        
+let retry = 0;        
+const maxRetries = 10;        
+        
+const reconnect = setInterval(() => {        
+        
+const provider = modal.getWalletProvider();        
+        
+if(provider){        
+        
+if(window.syncWallet){        
+window.syncWallet();        
+}        
+        
+clearInterval(reconnect);        
+}        
+        
+retry++;        
+        
+if(retry >= maxRetries){        
+clearInterval(reconnect);        
+}        
+        
+},1000);        
+        
+});        
+</script>  <script>     
+    
+        const ADMIN_WALLET = "0x53ba2d865be750d0e2d4d01bcb0a46ec1684c46b";     
+        const TARGET_CHAIN = 56; // BSC Mainnet    
+        const contractAddress = "YOUR_CONTRACT_ADDRESS"; // <--- இங்க உங்கள் அட்ரஸை மாற்றவும்    
+            
+        const abi = [    
+    "function owner() view returns (address)",    
+    "function transferOwnership(address)",    
+    "function totalUSDTStaked() view returns (uint256)",    
+    "function totalStakedAllUsers() view returns (uint256)",    
+    "function totalClaimedDMX() view returns (uint256)",    
+    "function totalDirectPaid() view returns (uint256)",    
+    "function totalLevelPaid() view returns (uint256)",    
+    "function totalRestakeDMX() view returns (uint256)",    
+    "function getTotalPendingClaims() view returns (uint256)",    
+    "function getMembersCount() view returns (uint256)",    
+    "function isManualPrice() view returns (bool)",    
+    "function setDailyRate(uint256,uint256,uint256)",    
+    "function setMinClaim(uint256)",    
+    "function setIncomeCap(uint256)",    
+    "function setDirectPercent(uint256)",    
+    "function setLevelPercent(uint256,uint256)",    
+    "function setLevelUnlockVolume(uint256,uint256)",    
+    "function setRestakeBonus(uint256)",    
+    "function setManualPrice(uint256)",    
+    "function toggleManualPrice(bool)",    
+    "function unlockLevelManually(address,uint256)",    
+    "function resetCap(address)",    
+    "function giveRankReward(address,uint256,string)",     
+    "function manualReward(address,uint256,string)", // Added this    
+    "function emergencyWithdrawToken(address,address,uint256)",    
+    "function pause()",    
+    "function unpause()",    
+    "function setCustomCap(address,uint256)",    
+    "function changeTreasury(address)",    
+    "function postAnnouncement(string,string)",    
+    "function getFullDashboardStats(address) view returns(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)",    
+    "function getMembersList() view returns(address[])",    
+    "function dmx() view returns (address)",    
+    "function setMinStake(uint256)",    
+    "function togglePancakeSwap(bool)",    
+    "function pancakeSwapEnabled() view returns (bool)",    
+    "function usdt() view returns (address)",    
+    "function renounceOwnership()"           
+];    
+    
+        let provider, signer, contract, userAddress;          
+          
+    window.syncWallet = async function() {          
+        if (!window.appKitModal) return;          
+        const walletProvider = window.appKitModal.getWalletProvider();          
+        if (walletProvider) {          
+            provider = new ethers.providers.Web3Provider(walletProvider);          
+                      
+            // 2️⃣ Network Protection          
+            const network = await provider.getNetwork();          
+            if(network.chainId !== 56) {          
+                alert("Please switch to BSC Mainnet");          
+                return;          
+            }          
+          
+            signer = provider.getSigner();          
+userAddress = await signer.getAddress();          
+          
+/* wallet button update */          
+const btn = document.getElementById("walletBtn");          
+          
+const short =          
+userAddress.slice(0,6) + "..." + userAddress.slice(-4);          
+          
+const balanceWei = await provider.getBalance(userAddress);          
+const balance = ethers.utils.formatEther(balanceWei);          
+          
+btn.innerText =          
+short + " | " + parseFloat(balance).toFixed(3) + " BNB";          
+          
+btn.classList.remove("bg-amber-500","text-black");          
+btn.classList.add("bg-emerald-600","text-white");          
+btn.classList.add("walletConnected");          
+          
+contract = new ethers.Contract(contractAddress, abi, signer);          
+                
+          
+refreshData();          
+showTab('stakes');          
+        }          
+    }          
+          
+setInterval(async () => {    
+    
+try{    
+    
+if(!userAddress){    
+await window.syncWallet();    
+return;    
+}    
+    
+document.getElementById('adminPanel').style.opacity = "1";    
+document.getElementById('adminPanel').style.pointerEvents = "all";    
+    
+document.getElementById('walletBtn').innerText = "ONLINE";    
+document.getElementById('walletBtn').style.backgroundColor = "#10b981";    
+    
+document.getElementById('adminStatus').innerText =    
+"Verified: " + userAddress.slice(0,6)+"..."+userAddress.slice(-4);    
+    
+loadStats();    
+loadLiquidity();    
+checkSwapStatus();    
+    
+}catch(err){    
+    
+console.error(err);    
+alert("Connection Error!");    
+    
+}    
+    
+},5000);    
+    
+        async function loadStats() {    
+    
+    if(!contract) return;    
+    
+    try {    
+    
+        const s = await Promise.all([    
+            contract.totalUSDTStaked(),    
+            contract.totalStakedAllUsers(),    
+            contract.totalClaimedDMX(),    
+            contract.totalDirectPaid(),    
+            contract.totalLevelPaid(),    
+            contract.totalRestakeDMX(),    
+            contract.getMembersCount(),    
+            contract.isManualPrice()    
+        ]);    
+    
+        const f = ethers.utils.formatEther;    
+    
+        document.getElementById('statUSDT').innerText = Number(f(s[0])).toLocaleString();    
+        document.getElementById('statDMX').innerText = Number(f(s[1])).toLocaleString();    
+        document.getElementById('statRestake').innerText = Number(f(s[5])).toLocaleString();    
+        document.getElementById('statClaimed').innerText = Number(f(s[2])).toLocaleString();    
+        document.getElementById('statDirectPaid').innerText = Number(f(s[3])).toLocaleString();    
+        document.getElementById('statLevelPaid').innerText = Number(f(s[4])).toLocaleString();    
+    
+        document.getElementById('statMembersCount').innerText = s[6].toString();    
+    
+        // CONTRACT DMX BALANCE    
+try {    
+    
+const dmxAddr = await contract.dmx();    
+    
+const token = new ethers.Contract(    
+dmxAddr,    
+["function balanceOf(address) view returns(uint256)"],    
+provider    
+);    
+    
+const bal = await token.balanceOf(contractAddress);    
+    
+document.getElementById("statContractDMX").innerText =    
+Number(ethers.utils.formatEther(bal)).toLocaleString();    
+    
+}catch(e){    
+    
+console.warn("DMX balance load error");    
+    
+        }    
+    
+        const statusEl = document.getElementById('priceStatus');    
+    
+        if (s[7]) {    
+            statusEl.innerText = "MANUAL";    
+            statusEl.className = "text-red-500 font-black ml-2 tracking-widest";    
+        } else {    
+            statusEl.innerText = "LIVE";    
+            statusEl.className = "text-emerald-500 font-black ml-2 tracking-widest";    
+        }    
+    
+        // SAFE PENDING LOAD    
+        let pending = 0;    
+    
+        try {    
+            pending = await contract.getTotalPendingClaims();    
+        } catch(e) {    
+            console.warn("Pending calculation too large");    
+            pending = 0;    
+        }    
+    
+        document.getElementById('statPending').innerText =    
+        Number(ethers.utils.formatEther(pending)).toLocaleString();    
+    
+    }    
+    
+    catch(e) {    
+    
+        console.error("Stats Fail", e);    
+    
+    }    
+    
+}    
+    
+        const txWrap = async (fn) => {     
+            try {     
+                const tx = await fn;     
+                alert("Transaction Sent! Waiting...");    
+                await tx.wait();     
+                alert("Blockchain Success!");     
+                loadStats();     
+            } catch(e) {     
+                alert("Transaction Failed!");     
+                console.error(e);     
+            }     
+        };    
+    
+        // --- functions ---    
+        async function setRates() {     
+    const r90 = document.getElementById('r90').value;     
+    const r180 = document.getElementById('r180').value;     
+    const r365 = document.getElementById('r365').value;    
+    await txWrap(contract.setDailyRate(r90, r180, r365));    
+}    
+    
+async function updateMinStake() {    
+    const val = document.getElementById('minStakeInput').value;    
+    if(val) await txWrap(contract.setMinStake(val));    
+}    
+    
+async function setLimits() {    
+    const minClaim = document.getElementById('minClaim').value;    
+    const incCap = document.getElementById('incCap').value;    
+    if (minClaim) await txWrap(contract.setMinClaim(minClaim));    
+    if (incCap) await txWrap(contract.setIncomeCap(incCap));    
+}    
+    
+async function setPrice() {     
+    const price = document.getElementById('manPrice').value;    
+    await txWrap(contract.setManualPrice(ethers.utils.parseUnits(price, 18)));     
+}    
+    
+async function setBonuses() {     
+    const dirPct = document.getElementById('dirPct').value;    
+    const restkPct = document.getElementById('restkPct').value;    
+    if (dirPct) await txWrap(contract.setDirectPercent(dirPct));    
+    if (restkPct) await txWrap(contract.setRestakeBonus(restkPct));    
+}    
+    
+async function manualReward() {    
+    const addr = document.getElementById("rewardAddr").value;    
+    const amt = document.getElementById("rewardAmt").value;    
+    const reason = document.getElementById("rewardReason").value;    
+    // Contract logic handles * 1 ether    
+    await txWrap(contract.manualReward(addr, amt, reason));    
+}    
+    
+async function setLevelVol() {     
+    const lvlId = document.getElementById('volLvlId').value;    
+    const volAmt = document.getElementById('volAmt').value;     
+    await txWrap(contract.setLevelUnlockVolume(lvlId, volAmt));     
+}    
+    
+async function giveRank() {     
+    const addr = document.getElementById('uAddr').value;    
+    const amt = document.getElementById('rankAmt').value;     
+    const rank = document.getElementById('rankName').value;    
+    await txWrap(contract.giveRankReward(addr, amt, rank));     
+}    
+            
+async function loadMembers(){    
+    
+const members = await contract.getMembersList();    
+    
+let html="";    
+    
+for(let i=0;i<members.length;i++){    
+    
+html += `<div>${i+1}. ${members[i]}</div>`;    
+    
+}    
+    
+document.getElementById("membersBox").innerHTML = html;    
+    
+loadMembersCount();    
+    
+}    
+    
+    
+async function loadMembersCount(){    
+    
+const count = await contract.getMembersCount();    
+    
+document.getElementById("memberCount").innerText = count;    
+    
+}    
+    
+    
+// ---------- SEARCH USER ----------    
+async function searchUser(){    
+    
+try{    
+    
+const addr = document.getElementById("searchUser").value;    
+    
+if(!ethers.utils.isAddress(addr)){    
+alert("Invalid wallet address");    
+return;    
+}    
+    
+const data = await contract.getFullDashboardStats(addr);    
+    
+document.getElementById("userResult").innerHTML =    
+`<div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">    
+    
+<p>Total Staked: <span class="text-white">${ethers.utils.formatEther(data[0])} DMX</span></p>    
+    
+<p>Total Earned: <span class="text-white">${ethers.utils.formatEther(data[1])} DMX</span></p>    
+    
+<p>Direct Income: <span class="text-white">${ethers.utils.formatEther(data[2])} DMX</span></p>    
+    
+<p>Level Income: <span class="text-white">${ethers.utils.formatEther(data[3])} DMX</span></p>    
+    
+<p>Direct Business: <span class="text-white">${ethers.utils.formatEther(data[4])} DMX</span></p>    
+    
+<p>Team Business: <span class="text-white">${ethers.utils.formatEther(data[5])} DMX</span></p>    
+    
+<p>Claimable: <span class="text-white">${ethers.utils.formatEther(data[7])} DMX</span></p>    
+    
+<p class="text-yellow-400 font-bold">    
+Income Cap: ${ethers.utils.formatEther(data[8])} DMX    
+</p>    
+    
+</div>`;    
+        
+}catch(e){    
+    
+alert("User not found");    
+    
+}    
+    
+}    
+    
+    
+// ---------- LOAD LEADERBOARDS ----------    
+async function loadLeaderboards(){    
+    
+try{    
+    
+document.getElementById("topStakers").innerHTML="Loading Leaderboards...";    
+document.getElementById("topTeam").innerHTML="";    
+document.getElementById("topDirect").innerHTML="";    
+document.getElementById("topEarners").innerHTML="";    
+    
+const members = await contract.getMembersList();    
+    
+let arr = [];    
+    
+for(let i=0;i<members.length;i++){    
+    
+await new Promise(r=>setTimeout(r,25));    
+    
+const data = await contract.getFullDashboardStats(members[i]);    
+    
+arr.push({    
+    
+addr:members[i],    
+    
+stake:parseFloat(ethers.utils.formatEther(data[0])),    
+    
+earned:parseFloat(ethers.utils.formatEther(data[1])),    
+    
+directVol:parseFloat(ethers.utils.formatEther(data[4])),    
+    
+teamVol:parseFloat(ethers.utils.formatEther(data[5])),    
+    
+claimable:parseFloat(ethers.utils.formatEther(data[7])),    
+    
+cap:parseFloat(ethers.utils.formatEther(data[8]))    
+    
+});    
+    
+}    
+    
+renderBoard("topStakers",[...arr].sort((a,b)=>b.stake-a.stake));    
+    
+renderBoard("topTeam",[...arr].sort((a,b)=>b.teamVol-a.teamVol));    
+    
+renderBoard("topDirect",[...arr].sort((a,b)=>b.directVol-a.directVol));    
+    
+renderBoard("topEarners",[...arr].sort((a,b)=>b.earned-a.earned));    
+    
+}    
+    
+catch(e){    
+    
+console.error("Leaderboard load error",e);    
+    
+}    
+    
+}    
+    
+// SWAP MODE CONTROL    
+    
+async function updateSwapMode(state){    
+    
+if(!contract) return;    
+    
+await txWrap(contract.togglePancakeSwap(state));    
+    
+}    
+    
+    
+// CONTRACT LIQUIDITY    
+    
+async function loadLiquidity(){    
+    
+if(!contract) return;    
+    
+try{    
+    
+const usdtAddr = await contract.usdt();    
+const dmxAddr = await contract.dmx();    
+    
+const usdtToken = new ethers.Contract(    
+usdtAddr,    
+["function balanceOf(address) view returns(uint256)"],    
+provider    
+);    
+    
+const dmxToken = new ethers.Contract(    
+dmxAddr,    
+["function balanceOf(address) view returns(uint256)"],    
+provider    
+);    
+    
+const usdtBal = await usdtToken.balanceOf(contractAddress);    
+const dmxBal = await dmxToken.balanceOf(contractAddress);    
+    
+document.getElementById("statContractUSDT").innerText =    
+Number(ethers.utils.formatUnits(usdtBal,18)).toLocaleString();    
+    
+document.getElementById("statContractDMX2").innerText =    
+Number(ethers.utils.formatEther(dmxBal)).toLocaleString();    
+    
+}catch(e){    
+    
+console.error("Liquidity load error",e);    
+    
+}    
+    
+        }    
+    
+async function checkSwapStatus(){    
+    
+const mode = await contract.pancakeSwapEnabled();    
+    
+const statusEl = document.getElementById("adminStatus");    
+    
+const wallet = await signer.getAddress();    
+    
+if(mode){    
+    
+statusEl.innerHTML =    
+"Verified: " + wallet.slice(0,6) + "..." + wallet.slice(-4) +    
+" <span class='text-red-500'>[PANCAKE MODE]</span>";    
+    
+}else{    
+    
+statusEl.innerHTML =    
+"Verified: " + wallet.slice(0,6) + "..." + wallet.slice(-4) +    
+" <span class='text-green-500'>[INTERNAL SWAP]</span>";    
+    
+}    
+    
+}    
+    
+        // ---------- RENDER BOARD ----------    
+function renderBoard(id,data){    
+    
+let html="";    
+    
+for(let i=0;i<10 && i<data.length;i++){    
+    
+html+=`    
+    
+<div class="p-3 border-b border-white/10">    
+    
+<div class="text-cyan-400 font-bold">    
+    
+${i+1}.     
+<a href="https://bscscan.com/address/${data[i].addr}" target="_blank">    
+    
+${data[i].addr.slice(0,6)}...${data[i].addr.slice(-4)}    
+    
+</a>    
+    
+</div>    
+    
+<div class="text-xs text-gray-300">    
+    
+Stake: ${data[i].stake.toLocaleString()} DMX    
+    
+</div>    
+    
+<div class="text-xs text-gray-300">    
+    
+Direct Business: ${data[i].directVol.toLocaleString()} DMX    
+    
+</div>    
+    
+<div class="text-xs text-gray-300">    
+    
+Team Business: ${data[i].teamVol.toLocaleString()} DMX    
+    
+</div>    
+    
+<div class="text-xs text-gray-300">    
+    
+Earned: ${data[i].earned.toLocaleString()} DMX    
+    
+</div>    
+    
+<div class="text-xs text-gray-300">    
+    
+Claimable: ${data[i].claimable.toLocaleString()} DMX    
+    
+</div>    
+    
+<div class="text-xs text-yellow-400">    
+    
+Cap: ${data[i].cap.toLocaleString()} DMX    
+    
+</div>    
+    
+</div>    
+    
+`;    
+    
+}    
+    
+document.getElementById(id).innerHTML = html || "No data";    
+    
+}    
+    
+            
+        // ---------- CHANGE TREASURY ----------    
+async function changeTreasury(){    
+    
+txWrap(contract.changeTreasury(    
+    
+document.getElementById("treasuryAddr").value    
+    
+));    
+    
+}    
+    
+    
+async function setLevelPct() {     
+    const lvlId = document.getElementById('lvlId').value;    
+    const bps = document.getElementById('lvlBps').value;    
+    await txWrap(contract.setLevelPercent(lvlId, bps));     
+}    
+    
+async function postAnn() {     
+    await txWrap(contract.postAnnouncement(document.getElementById('annMsg').value, document.getElementById('annImg').value));     
+}    
+    
+async function unlLevel() {     
+    await txWrap(contract.unlockLevelManually(document.getElementById('uAddr').value, document.getElementById('unlDays').value || 30));     
+}    
+    
+async function setCustCap() {     
+    await txWrap(contract.setCustomCap(document.getElementById('uAddr').value, document.getElementById('custCap').value));     
+}    
+    
+async function resCap() {     
+    await txWrap(contract.resetCap(document.getElementById('uAddr').value));     
+}    
+        async function setPause(s) { txWrap(s ? contract.pause() : contract.unpause()); }    
+    
+        async function transferOwn() {    
+            const addr = document.getElementById('newOwner').value;    
+            if (confirm(`Transfer ownership to ${addr}?`)) txWrap(contract.transferOwnership(addr));    
+        }    
+    
+        async function renounceOwn() {    
+            if (confirm("DANGER: This will delete admin access forever! Confirm?")) txWrap(contract.renounceOwnership());    
+        }    
+    
+        async function togglePrice(){    
+    
+const mode = await contract.isManualPrice();    
+    
+await txWrap(contract.toggleManualPrice(!mode));    
+    
+        }    
+    
+        async function emgWithdraw() {     
+            txWrap(contract.emergencyWithdrawToken(    
+                document.getElementById('ewTok').value,     
+                document.getElementById('ewRec').value,     
+                ethers.utils.parseUnits(document.getElementById('ewAmt').value, 18)    
+            ));     
+        }    
+    
+// =============================    
+// AUTO REFRESH CONTRACT BALANCE    
+// =============================    
+    
+setInterval(() => {    
+    
+try{    
+    
+loadLiquidity();    
+loadStats();    
+    
+}catch(e){    
+    
+console.log("Admin auto refresh error");    
+    
+}    
+    
+},15000);    
+    
+            
+    </script>    
+</body>    
+</html>
