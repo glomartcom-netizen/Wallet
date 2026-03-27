@@ -886,21 +886,23 @@ window.syncWallet = async function() {
             signer = provider.getSigner();
             const addr = await signer.getAddress();
 
-            // Admin Security Check
-            const contractOwner = await contract.owner();
-
-if(
-    userAddress.toLowerCase() !== ADMIN_WALLET.toLowerCase() &&
-    userAddress.toLowerCase() !== contractOwner.toLowerCase()
-){
-    document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
-    return;
-}
-
-            userAddress = addr;
+            // ✅ INIT CONTRACT FIRST
             contract = new ethers.Contract(contractAddress, abi, signer);
 
-            // Trigger UI update immediately
+            // ✅ GET OWNER
+            const contractOwner = await contract.owner();
+
+            // ✅ SECURITY CHECK
+            if(
+                addr.toLowerCase() !== ADMIN_WALLET.toLowerCase() &&
+                addr.toLowerCase() !== contractOwner.toLowerCase()
+            ){
+                document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
+                return;
+            }
+
+            userAddress = addr;
+
             await handleUIUpdate(true);
             
         } catch (error) {
